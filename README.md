@@ -8,7 +8,7 @@
 token: GITHUB_API_TOKEN
 
 ```
-- Run the file using below code
+- Run the file using below command.
 ``` shell
 python3 python_crawler.py
 ```
