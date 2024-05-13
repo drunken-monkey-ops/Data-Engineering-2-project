@@ -5,10 +5,10 @@
 - Paste your git token as shown below
 ``` YAML
 
-token: GITHUB_API_TOKEN
+token: "GITHUB_API_TOKEN"
 
 ```
 - Run the file using below command.
-``` shell
+``` bash
 python3 python_crawler.py
 ```
