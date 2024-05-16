@@ -21,11 +21,14 @@ python3 -m pip install -r requirements.txt
 python3 python_crawler.py
 ```
 
-### API
+### Producer
 
-- You can also start the API by running
+- You can start the producer by running
 
 ``` bash
-docker compose up
+sudo docker compose -f composers/producer_compose.yml up
 ```
-- And the going to http://localhost:8000 in a browser
+- Then you can run the test consumer!
+``` bash
+python3 consumer.py
+```

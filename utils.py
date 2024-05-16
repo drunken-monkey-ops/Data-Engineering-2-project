@@ -21,6 +21,7 @@ def get_token() -> str:
             return yaml.safe_load(config)["token"]
     if "github_token" in environ:
         return environ["github_token"]
+    raise Exception("No token!")
 
 
 def get_headers() -> dict:
@@ -30,3 +31,29 @@ def get_headers() -> dict:
         "X-GitHub-Api-Version": "2022-11-28",
         "Authorization": f"Bearer {get_token()}",
     }
+
+
+def has_tests(items: list) -> bool:
+    keywords = ["test", "tests"]
+    for item in items:
+        if item["name"] in keywords:
+            return True
+    return False
+
+
+def has_ci_cd(items: list) -> bool:
+    keywords = [
+        # ".github/work/flows",  # GitHub Actions
+        ".circleci",  # CircleCI
+        ".gitlab-ci.yml",  # GitLab CI
+        ".travis.yml",  # Travis CI
+        "azure-pipelines.yml",  # Azure Pipelines
+        "Jenkinsfile",  # Jenkins
+        ".ci",  # Custom setups or various CI/CD tools
+        ".ci-config",  # Alternative custom setups
+    ]
+
+    for item in items:
+        if item["name"] in keywords:
+            return True
+    return False

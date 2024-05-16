@@ -1,0 +1,23 @@
+version: "3.0"
+
+services:
+  producer:
+    build: ../.
+    # We need to wait for pulsar to be up and running
+    links:
+      - "pulsar:pulsar_domain"
+
+  pulsar:
+    image: apachepulsar/pulsar:3.2.2
+    command: >
+      /pulsar/bin/pulsar standalone
+    ports:
+      - "6650:6650"
+      - "8080:8080"
+    volumes:
+      - pulsar_data:/pulsar/data
+      - pulsar_conf:/pulsar/conf
+
+volumes:
+  pulsar_data:
+  pulsar_conf:

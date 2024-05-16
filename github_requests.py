@@ -3,6 +3,31 @@ from requests.models import PreparedRequest
 from utils import get_headers
 from datetime import datetime
 
+def get_repo_content(owner: str, repo: str) -> list:
+    uri = f"https://api.github.com/repos/{owner}/{repo}/contents"
+
+    request_params = {"per_page": 100}
+
+    req_url = PreparedRequest()
+    req_url.prepare_url(uri, request_params)
+    req_url = req_url.url
+
+    elements = []
+
+    while True:
+        response = requests.get(req_url, headers=get_headers())
+        if response.status_code != 200:
+            print(
+                f"Failed to fetch repositories: {response.status_code}, message: {response.json().get('message')}"
+            )
+            break
+        elements.extend(response.json())
+        if "links" in response and "next" in response.links:
+            req_url = response.links["next"]["url"]
+        else:
+            break
+
+    return elements
 
 def get_commit_count(owner: str, repo: str) -> int:
     uri = f"https://api.github.com/repos/{owner}/{repo}/commits"
