@@ -1,0 +1,9 @@
+version: '3.8'
+
+services:
+  consumer:
+    build:
+      context: ../.
+      dockerfile: ./images/consumer
+    # command: >
+    #   /bin/bash -c "python /app/consumer.py"
