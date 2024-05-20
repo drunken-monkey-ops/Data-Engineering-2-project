@@ -1,7 +1,34 @@
 import requests
+import re
 from requests.models import PreparedRequest
 from utils import get_headers
 from datetime import datetime
+
+def get_repo_languages(owner: str, repo: str) -> list:
+    uri = f"https://api.github.com/repos/{owner}/{repo}/languages"
+
+    request_params = {"per_page": 100}
+
+    req_url = PreparedRequest()
+    req_url.prepare_url(uri, request_params)
+    req_url = req_url.url
+
+    elements = []
+
+    while True:
+        response = requests.get(req_url, headers=get_headers())
+        if response.status_code != 200:
+            print(
+                f"Failed to fetch repositories: {response.status_code}, message: {response.json().get('message')}"
+            )
+            break
+        elements.extend(response.json().keys())
+        if "next" in response.links:
+            req_url = response.links["next"]["url"]
+        else:
+            break
+
+    return elements
 
 def get_repo_content(owner: str, repo: str) -> list:
     uri = f"https://api.github.com/repos/{owner}/{repo}/contents"
@@ -22,7 +49,7 @@ def get_repo_content(owner: str, repo: str) -> list:
             )
             break
         elements.extend(response.json())
-        if "links" in response and "next" in response.links:
+        if "next" in response.links:
             req_url = response.links["next"]["url"]
         else:
             break
@@ -32,29 +59,20 @@ def get_repo_content(owner: str, repo: str) -> list:
 def get_commit_count(owner: str, repo: str) -> int:
     uri = f"https://api.github.com/repos/{owner}/{repo}/commits"
 
-    request_params = {"per_page": 100}
+    # https://stackoverflow.com/a/70610670
+    request_params = {"per_page": 1}
 
     req_url = PreparedRequest()
     req_url.prepare_url(uri, request_params)
     req_url = req_url.url
 
-    commit_count = 0
-
-    while True:
-        response = requests.get(req_url, headers=get_headers())
-        if response.status_code != 200:
-            print(
-                f"Failed to fetch repositories: {response.status_code}, message: {response.json().get('message')}"
-            )
-            break
-        commit_count += len(response.json())
-        if "links" in response and "next" in response.links:
-            req_url = response.links["next"]["url"]
-        else:
-            break
-
-    return commit_count
-
+    response = requests.get(req_url, headers=get_headers())
+    if response.status_code != 200:
+        print(
+            f"Failed to fetch repositories: {response.status_code}, message: {response.json().get('message')}"
+        )
+    return int(re.findall(r'\d+', response.links["last"]["url"])[-1])
+    
 
 def get_repositories(from_date: datetime = None, to_date: datetime = None):
     from_date = from_date if from_date else datetime(year=2023, month=5, day=1)
@@ -74,8 +92,6 @@ def get_repositories(from_date: datetime = None, to_date: datetime = None):
     req_url.prepare_url(uri, request_params)
     req_url = req_url.url
 
-    repos = []
-
     while True:
         response = requests.get(req_url, headers=get_headers())
         if response.status_code != 200:
@@ -83,10 +99,11 @@ def get_repositories(from_date: datetime = None, to_date: datetime = None):
                 f"Failed to fetch repositories: {response.status_code}, message: {response.json().get('message')}"
             )
             break
-        repos.extend(response.json()["items"])
-        if "links" in response and "next" in response.links:
+
+        for repo in response.json()["items"]:
+            yield repo
+        
+        if "next" in response.links:
             req_url = response.links["next"]["url"]
         else:
             break
-
-    return repos

@@ -34,7 +34,7 @@ def get_headers() -> dict:
 
 
 def has_tests(items: list) -> bool:
-    keywords = ["test", "tests"]
+    keywords = ["test", "tests", "testing"]
     for item in items:
         if item["name"] in keywords:
             return True
