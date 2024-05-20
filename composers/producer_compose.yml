@@ -1,8 +1,10 @@
-version: "3.0"
+version: "3.8"
 
 services:
   producer:
-    build: ../.
+    build: 
+      context: ../.
+      dockerfile: ./images/producer
     # We need to wait for pulsar to be up and running
     links:
       - "pulsar:pulsar_domain"
