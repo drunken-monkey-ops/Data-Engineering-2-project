@@ -1,4 +1,5 @@
 import yaml
+import re
 from os import environ
 from pathlib import Path
 
@@ -32,28 +33,23 @@ def get_headers() -> dict:
         "Authorization": f"Bearer {get_token()}",
     }
 
+def keyword_in_text(text: str, keyword: str) -> bool:
+    re_match = re.search(r"\b{keyword}\b".format(keyword=keyword), text)
+    return True if re_match else False
 
-def has_tests(items: list) -> bool:
+def has_tests(repo_content: list, workflows: list) -> bool:
     keywords = ["test", "tests", "testing"]
-    for item in items:
-        if item["name"] in keywords:
+    
+    for workflow in workflows:
+        if any(map(lambda x: keyword_in_text(workflow["name"], x), keywords)):
             return True
+    
+    for content in repo_content:
+        if content["name"] in keywords:
+            return True
+
     return False
 
 
-def has_ci_cd(items: list) -> bool:
-    keywords = [
-        # ".github/work/flows",  # GitHub Actions
-        ".circleci",  # CircleCI
-        ".gitlab-ci.yml",  # GitLab CI
-        ".travis.yml",  # Travis CI
-        "azure-pipelines.yml",  # Azure Pipelines
-        "Jenkinsfile",  # Jenkins
-        ".ci",  # Custom setups or various CI/CD tools
-        ".ci-config",  # Alternative custom setups
-    ]
-
-    for item in items:
-        if item["name"] in keywords:
-            return True
-    return False
+def has_ci_cd(workflows: list) -> bool:
+    return True if workflows else False

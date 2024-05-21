@@ -4,6 +4,36 @@ from requests.models import PreparedRequest
 from utils import get_headers
 from datetime import datetime
 
+def get_repo_workflows(owner: str, repo: str) -> list:
+    uri = f"https://api.github.com/repos/{owner}/{repo}/actions/workflows"
+
+    request_params = {"per_page": 100}
+
+    req_url = PreparedRequest()
+    req_url.prepare_url(uri, request_params)
+    req_url = req_url.url
+
+    elements = []
+
+    while True:
+        response = requests.get(req_url, headers=get_headers())
+        if response.status_code != 200:
+            print(
+                f"Failed to fetch repositories: {response.status_code}, message: {response.json().get('message')}"
+            )
+            break
+        
+        data = response.json()
+        if data["total_count"] > 0:
+            elements.extend(data["workflows"])
+        
+        if "next" in response.links:
+            req_url = response.links["next"]["url"]
+        else:
+            break
+
+    return elements
+
 def get_repo_languages(owner: str, repo: str) -> list:
     uri = f"https://api.github.com/repos/{owner}/{repo}/languages"
 

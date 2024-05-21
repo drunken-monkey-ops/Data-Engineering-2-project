@@ -5,5 +5,3 @@ services:
     build:
       context: ../.
       dockerfile: ./images/consumer
-    # command: >
-    #   /bin/bash -c "python /app/consumer.py"
