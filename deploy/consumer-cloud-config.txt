@@ -10,8 +10,14 @@ packages:
  - software-properties-common
 
 byobu_default: system
-
+write_files:
+- path: /etc/environment
+  content: |
+    IP={var_1}
+    IP_CLIENT='<Client_VM_IP>'
+  append: true
 runcmd:
+
  - echo "adding docker repo"
  - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
  - add-apt-repository -y "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable"

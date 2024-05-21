@@ -43,16 +43,15 @@ else:
 #print("Path at terminal when executing this file")
 print(os.getcwd() + "\n")
 producer_cfg_file_path = os.getcwd()+'/producer-cloud-config.txt'
-consumer_cfg_file_path = os.getcwd()+'/consumer-cloud-config.txt'
+
 
 if os.path.isfile(producer_cfg_file_path):
-	userdata_producer = open(producer_cfg_file_path)
+    userdata_producer = open(producer_cfg_file_path)
 
 else:
-	sys.exit("cloud-cfg.txt is not in current working directory")
+    sys.exit("cloud-cfg.txt is not in current working directory")
 
-if os.path.isfile(consumer_cfg_file_path):
-	userdata_consumer = open(consumer_cfg_file_path)
+
 
 secgroups = ['default']
 
@@ -60,26 +59,24 @@ secgroups = ['default']
 
 print ("Creating instance .. ")
 
-instance = nova.servers.create(name="prod_server_with_docker", image=image, flavor=flavor,userdata=userdata, nics=nics,security_groups=secgroups)
+instance = nova.servers.create(name="prod_server_with_docker", image=image, flavor=flavor,userdata=userdata_producer, nics=nics,security_groups=secgroups)
 
 # In case you want to login to the production server
 instance_producer = nova.servers.create(name="producer_group_9", image=image, flavor=flavor, key_name='DE_2_key',userdata=userdata_producer, nics=nics,security_groups=secgroups)
-instance_consumer = nova.servers.create(name="consumer_group_9", image=image, flavor=flavor, key_name='DE_2_key',userdata=userdata_consumer, nics=nics,security_groups=secgroups)
 
 
 inst_status_prod = instance_producer.status
-inst_status_cons = instance_consumer.status
+
 print ("waiting for 10 seconds.. ")
 time.sleep(10)
 
-while inst_status_prod == 'BUILD' or inst_status_cons == 'BUILD':
+while inst_status_prod == 'BUILD' :
     print ("Instance: "+instance_producer.name+" is in "+inst_status_prod+" state, sleeping for 5 seconds more...")
-    print ("Instance: "+instance_consumer.name+" is in "+inst_status_cons+" state, sleeping for 5 seconds more...")
+
     time.sleep(5)
     instance_producer = nova.servers.get(instance_producer.id)
     inst_status_prod = instance_producer.status
-    instance_consumer = nova.servers.get(instance_consumer.id)
-    inst_status_cons = instance_consumer.status
+
 
 ip_address_prod = None
 for network in instance_producer.networks[private_net]:
@@ -89,6 +86,34 @@ for network in instance_producer.networks[private_net]:
 if ip_address_prod is None:
     raise RuntimeError('No IP address assigned!')
 
+
+
+print ("Instance: "+ instance_producer.name +" is in " + inst_status_prod + " state" + " ip address: "+ ip_address_prod)
+
+consumer_cfg_file_path = os.getcwd()+'/consumer-cloud-config.txt'
+if os.path.isfile(consumer_cfg_file_path):
+    lines = ''
+    with open(consumer_cfg_file_path) as file:
+        lines = ''.join(file.readlines())
+    lines = lines.replace("{var_1}", f"'{ip_address_prod}'")
+    with open(consumer_cfg_file_path, 'w') as file:
+        file.write(lines)
+    userdata_consumer = open(consumer_cfg_file_path)
+
+print("Rest for sometime.......")
+
+time.sleep(30)
+instance_consumer = nova.servers.create(name="consumer_group_9", image=image, flavor=flavor, key_name='DE_2_key',userdata=userdata_consumer, nics=nics,security_groups=secgroups)
+inst_status_cons = instance_consumer.status
+
+print ("waiting for 10 seconds.. ")
+time.sleep(10)
+while inst_status_cons == 'BUILD' :
+    print ("Instance: "+instance_consumer.name+" is in "+inst_status_cons+" state, sleeping for 5 seconds more...")
+    time.sleep(5)
+    instance_consumer = nova.servers.get(instance_consumer.id)
+    inst_status_cons = instance_consumer.status
+
 ip_address_cons = None
 for network in instance_consumer.networks[private_net]:
     if re.match('\d+\.\d+\.\d+\.\d+', network):
@@ -97,5 +122,4 @@ for network in instance_consumer.networks[private_net]:
 if ip_address_cons is None:
     raise RuntimeError('No IP address assigned!')
 
-print ("Instance: "+ instance_producer.name +" is in " + inst_status_prod + " state" + " ip address: "+ ip_address_prod)
 print ("Instance: "+ instance_consumer.name +" is in " + inst_status_cons + " state" + " ip address: "+ ip_address_cons)
