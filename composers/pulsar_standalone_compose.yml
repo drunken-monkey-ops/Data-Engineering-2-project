@@ -16,15 +16,6 @@ services:
     #   interval: 30s
     #   timeout: 10s
     #   retries: 5
-  producer:
-    build: 
-      context: ../.
-      dockerfile: ./images/producer
-    # depends_on:
-    #   pulsar:
-    #     condition: service_healthy
-    links:
-      - "pulsar:pulsar_domain"
 
 volumes:
   pulsar_data:

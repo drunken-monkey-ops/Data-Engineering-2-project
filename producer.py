@@ -2,12 +2,18 @@ from github_requests import *
 from utils import has_ci_cd, has_tests
 import pulsar
 import json
+import logging
+from time import sleep
+
+logging.getLogger().setLevel(logging.CRITICAL)
+
+print("Sleeping for 20 seconds until pulsar is up")
+
+sleep(20)
 
 client = pulsar.Client('pulsar://pulsar_domain:6650')
 
 repo_producer = client.create_producer('repos')
-
-repos = get_repositories()
 
 for repo in get_repositories():
     owner, name = repo["full_name"].split('/')
@@ -20,5 +26,6 @@ for repo in get_repositories():
     repo["commits"] = get_commit_count(owner, name)
     repo["languages"] = get_repo_languages(owner, name)
     repo_producer.send(json.dumps(repo).encode())
+    print("Done!")
 
 client.close()
