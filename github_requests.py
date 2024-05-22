@@ -9,7 +9,7 @@ def get_repo_workflows(owner: str, repo: str) -> list:
 
     request_params = {"per_page": 100}
 
-    req_url = PreparedRequest()
+    req_url = PreparedRequest()  # Prepare the full URL with query parameters
     req_url.prepare_url(uri, request_params)
     req_url = req_url.url
 
@@ -17,17 +17,17 @@ def get_repo_workflows(owner: str, repo: str) -> list:
 
     while True:
         response = requests.get(req_url, headers=get_headers())
-        if response.status_code != 200:
-            print(
+        if response.status_code != 200:    #Print an error message if the request fails
+            print(   
                 f"Failed to fetch repositories: {response.status_code}, message: {response.json().get('message')}"
             )
             break
         
         data = response.json()
         if data["total_count"] > 0:
-            elements.extend(data["workflows"])
+            elements.extend(data["workflows"]) # If workflows are found, add them to the list
         
-        if "next" in response.links:
+        if "next" in response.links:    # Check if there's a next page
             req_url = response.links["next"]["url"]
         else:
             break
