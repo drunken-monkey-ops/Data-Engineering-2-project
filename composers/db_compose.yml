@@ -19,7 +19,7 @@ services:
     environment:
       JUPYTER_ENABLE_LAB: "yes"
     command: >
-      start-notebook.sh --NotebookApp.token='yourpassword'
+      start-notebook.sh --NotebookApp.allow_origin='*' --NotebookApp.ip='0.0.0.0' --NotebookApp.token='yourpassword'
 
 volumes:
   mongo_data:
