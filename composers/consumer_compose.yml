@@ -5,3 +5,6 @@ services:
     build:
       context: ../.
       dockerfile: ./images/consumer
+    environment:
+      IP : ${IP}
+      IP_CLIENT: ${IP_CLIENT}
