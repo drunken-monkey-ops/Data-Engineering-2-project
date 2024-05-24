@@ -3,49 +3,30 @@ import re
 from os import environ
 from pathlib import Path
 
-TOKEN = ""
-
 """
 You can either:
     * set the TOKEN variable with the token
     * set an environment variable called "github_token" in your OS with the token
     * create a yaml file called "config.yml" in this same directory, with an attribute called "token"
 """
-
-
-def get_token() -> str:
-    if TOKEN:
-        return TOKEN
-    print(Path.cwd())
+def read_tokens() -> list:
     if (Path.cwd() / "config.yml").exists():
         with open("config.yml", "r") as config:
-            return yaml.safe_load(config)["token"]
-    if "github_token" in environ:
-        return environ["github_token"]
-    raise Exception("No token!")
-
-
-def get_headers() -> dict:
-    return {
-        "User-Agent": "Thunder Client (https://www.thunderclient.com)",
-        "Accept": "application/vnd.github+json",
-        "X-GitHub-Api-Version": "2022-11-28",
-        "Authorization": f"Bearer {get_token()}",
-    }
+            return yaml.safe_load(config)["tokens"]
+    elif "github_token" in environ:
+        return environ["github_token"].split(',')
+    elif not TOKENS:
+        raise Exception("No token!")
 
 def keyword_in_text(text: str, keyword: str) -> bool:
     re_match = re.search(r"\b{keyword}\b".format(keyword=keyword), text)
     return True if re_match else False
 
-def has_tests(repo_content: list, workflows: list) -> bool:
+def has_tests(workflows: list) -> bool:
     keywords = ["test", "tests", "testing"]
     
     for workflow in workflows:
         if any(map(lambda x: keyword_in_text(workflow["name"], x), keywords)):
-            return True
-    
-    for content in repo_content:
-        if content["name"] in keywords:
             return True
 
     return False

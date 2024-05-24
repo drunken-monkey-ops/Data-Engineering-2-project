@@ -1,8 +1,64 @@
 import requests
 import re
 from requests.models import PreparedRequest
-from utils import get_headers
+from utils import read_tokens
 from datetime import datetime
+from time import sleep
+
+TOKENS = []
+
+current_token = {
+    "core": {"token": "", "remaining": -1, "sleep_time": 60 * 60, "limit": 5000},
+    "search": {
+        "token": "",
+        "remaining": -1,
+        "sleep_time": 60,
+        "limit": 30,
+    },
+}
+
+def get_token(type: str):
+    global TOKENS
+    if not TOKENS:
+        TOKENS = read_tokens()
+
+    if current_token[type]["remaining"] <= 0:
+        token_found = False
+        for token in TOKENS:
+            if token != current_token[type]["token"]:
+                data = get_rate_limit(token)
+                if data[type]["remaining"] > 0:
+                    current_token[type]["token"] = token
+                    current_token[type]["remaining"] = data[type]["remaining"]
+                    token_found = True
+                    break
+        if not token_found:
+            sleep(current_token[type]["sleep_time"])
+            current_token[type]["remaining"] = current_token[type]["limit"]
+
+    current_token[type]["remaining"] -= 1
+    return current_token[type]["token"]
+
+
+def get_headers(type: str = "core", token: str = None) -> dict:
+    return {
+        "User-Agent": "Thunder Client (https://www.thunderclient.com)",
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+        "Authorization": f"Bearer {token if token else get_token(type)}",
+    }
+
+
+def get_rate_limit(token: str):
+    req_url = f"https://api.github.com/rate_limit"
+
+    response = requests.get(req_url, headers=get_headers(token=token))
+    if response.status_code != 200:
+        print(
+            f"Failed to fetch repositories: {response.status_code}, message: {response.json().get('message')}"
+        )
+    return response.json()["resources"]
+
 
 def get_repo_workflows(owner: str, repo: str) -> list:
     uri = f"https://api.github.com/repos/{owner}/{repo}/actions/workflows"
@@ -17,22 +73,25 @@ def get_repo_workflows(owner: str, repo: str) -> list:
 
     while True:
         response = requests.get(req_url, headers=get_headers())
-        if response.status_code != 200:    #Print an error message if the request fails
-            print(   
+        if response.status_code != 200:  # Print an error message if the request fails
+            print(
                 f"Failed to fetch repositories: {response.status_code}, message: {response.json().get('message')}"
             )
             break
-        
+
         data = response.json()
         if data["total_count"] > 0:
-            elements.extend(data["workflows"]) # If workflows are found, add them to the list
-        
-        if "next" in response.links:    # Check if there's a next page
+            elements.extend(
+                data["workflows"]
+            )  # If workflows are found, add them to the list
+
+        if "next" in response.links:  # Check if there's a next page
             req_url = response.links["next"]["url"]
         else:
             break
 
     return elements
+
 
 def get_repo_languages(owner: str, repo: str) -> list:
     uri = f"https://api.github.com/repos/{owner}/{repo}/languages"
@@ -60,6 +119,7 @@ def get_repo_languages(owner: str, repo: str) -> list:
 
     return elements
 
+
 def get_repo_content(owner: str, repo: str) -> list:
     uri = f"https://api.github.com/repos/{owner}/{repo}/contents"
 
@@ -86,6 +146,7 @@ def get_repo_content(owner: str, repo: str) -> list:
 
     return elements
 
+
 def get_commit_count(owner: str, repo: str) -> int:
     uri = f"https://api.github.com/repos/{owner}/{repo}/commits"
 
@@ -101,12 +162,10 @@ def get_commit_count(owner: str, repo: str) -> int:
         print(
             f"Failed to fetch repositories: {response.status_code}, message: {response.json().get('message')}"
         )
-    return int(re.findall(r'\d+', response.links["last"]["url"])[-1])
-    
+    return int(re.findall(r"\d+", response.links["last"]["url"])[-1])
 
-def get_repositories(from_date: datetime = None, to_date: datetime = None):
-    from_date = from_date if from_date else datetime(year=2023, month=5, day=1)
-    to_date = to_date if to_date else datetime(year=2024, month=5, day=1)
+
+def get_repositories(from_date: datetime, to_date: datetime):
     search_params = [
         "license:mit",
         "license:apache-2.0",
@@ -123,7 +182,7 @@ def get_repositories(from_date: datetime = None, to_date: datetime = None):
     req_url = req_url.url
 
     while True:
-        response = requests.get(req_url, headers=get_headers())
+        response = requests.get(req_url, headers=get_headers("search"))
         if response.status_code != 200:
             print(
                 f"Failed to fetch repositories: {response.status_code}, message: {response.json().get('message')}"
@@ -132,7 +191,7 @@ def get_repositories(from_date: datetime = None, to_date: datetime = None):
 
         for repo in response.json()["items"]:
             yield repo
-        
+
         if "next" in response.links:
             req_url = response.links["next"]["url"]
         else:
