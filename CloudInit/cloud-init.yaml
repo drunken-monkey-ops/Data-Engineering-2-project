@@ -1,0 +1,4 @@
+#cloud-config
+runcmd:
+  - chmod +x /home/ubuntu/config.sh
+  - /home/ubuntu/config.sh
