@@ -21,7 +21,6 @@ count = 1
 while start_date < end_date:
     for repo in get_repositories(start_date, start_date + delta):
         owner, name = repo["full_name"].split('/') # Iterate over each repository in the list
-        # content = get_repo_content(owner, name)   # Get the content of the repository
         workflows = get_repo_workflows(owner, name)  # Get the workflows of the repository
 
         repo["owner"] = owner

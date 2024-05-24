@@ -15,8 +15,7 @@ def read_tokens() -> list:
             return yaml.safe_load(config)["tokens"]
     elif "github_token" in environ:
         return environ["github_token"].split(',')
-    elif not TOKENS:
-        raise Exception("No token!")
+    raise Exception("No token!")
 
 def keyword_in_text(text: str, keyword: str) -> bool:
     re_match = re.search(r"\b{keyword}\b".format(keyword=keyword), text)
@@ -30,7 +29,6 @@ def has_tests(workflows: list) -> bool:
             return True
 
     return False
-
 
 def has_ci_cd(workflows: list) -> bool:
     return True if workflows else False

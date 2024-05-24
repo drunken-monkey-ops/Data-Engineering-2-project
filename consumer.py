@@ -13,8 +13,6 @@ mongo_client = MongoClient(f"mongodb://{client_ip}:27017/")
 db = mongo_client["repo_database"]
 collection = db["repo_collection"]
 
-print(f"pulsar://{pulsar_ip}:6650")
-
 pulsar_client = pulsar.Client(f"pulsar://{pulsar_ip}:6650")
 repo_consumer = pulsar_client.subscribe("repos", subscription_name="repos-sub")
 
