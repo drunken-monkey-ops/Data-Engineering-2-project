@@ -22,4 +22,4 @@ runcmd:
  - chmod +x /usr/local/bin/docker-compose
  - git clone https://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@github.com/drunken-monkey-ops/Data-Engineering-2-project.git
 # - docker build -f /model_serving/single_server_with_docker/production_server/Dockerfile .
-# - docker compose -f /Data-Engineering-2-project/composers/producer_compose.yml up -d
+ - docker compose -f /Data-Engineering-2-project/composers/producer_compose.yml up -d
