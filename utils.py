@@ -3,6 +3,8 @@ import re
 from os import environ
 from pathlib import Path
 
+TOKENS = []
+
 """
 You can either:
     * set the TOKEN variable with the token

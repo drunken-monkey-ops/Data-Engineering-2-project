@@ -1,6 +1,8 @@
 from pymongo import MongoClient
 import pulsar
-import json
+from datetime import datetime, timedelta
+from github_requests import get_repositories, get_commit_count, get_repo_workflows, get_repo_languages
+from utils import has_ci_cd, has_tests, TOKENS
 from os import environ as env
 
 client_ip = env["IP_CLIENT"] if "IP_CLIENT" in env else "localhost"
@@ -14,20 +16,49 @@ db = mongo_client["repo_database"]
 collection = db["repo_collection"]
 
 pulsar_client = pulsar.Client(f"pulsar://{pulsar_ip}:6650")
-repo_consumer = pulsar_client.subscribe("repos", subscription_name="repos-sub")
+date_consumer = pulsar_client.subscribe("dates", subscription_name="dates-sub")
+token_consumer = pulsar_client.subscribe("tokens", subscription_name="tokens-sub")
 
-# Define the keys we are interested in from the incoming Pulsar messages
+for _ in range(2):
+    try:
+        data = token_consumer.receive(200)
+        token_consumer.acknowledge(data)
+        TOKENS.append(data.value().decode())
+    except:
+        break
+
 keys = ["name", "owner", "has_tests", "has_ci_cd", "commits", "languages", "created_at"]
 
+delta = timedelta(days=1)
+
 while True:
-    data = repo_consumer.receive()
-    repo_consumer.acknowledge(data)
+    data = date_consumer.receive()
+    date_consumer.acknowledge(data)
+    date = datetime.fromisoformat(data.value().decode())
 
-    data = data.value() # Get the actual content of the message
-    repo = json.loads(data)  # Parse the JSON content of the message into a Python dictionary
-    repo = {key: repo[key] for key in keys} # Filter the dictionary to include only the keys we are interested in//dictionary comprehension.
+    for repo in get_repositories(date, date + delta):
+        owner, name = repo["full_name"].split(
+                "/"
+            )  # Iterate over each repository in the list
+        try:
+            workflows = get_repo_workflows(
+                owner, name
+            )  # Get the workflows of the repository
 
-    if collection.count_documents({"name": repo["name"], "owner": repo["owner"]}) == 0:
-        insert_result = collection.insert_one(repo)
+            repo["owner"] = owner
+            repo["has_tests"] = has_tests(workflows)
+            repo["has_ci_cd"] = has_ci_cd(workflows)
+            repo["commits"] = get_commit_count(owner, name)
+            repo["languages"] = get_repo_languages(owner, name)
 
-    print(json.dumps(repo))
+            # repo_producer.send(json.dumps(repo).encode())
+            repo = {
+                key: repo[key] for key in keys
+            }  # Filter the dictionary to include only the keys we are interested in//dictionary comprehension.
+
+            print(f"{count}) Done with {owner}/{name}...")
+            insert_result = collection.insert_one(repo)
+            count += 1
+        except Exception as e:
+            print(f"Failed on {owner}/{name}: {str(e)}")
+    count = 1
