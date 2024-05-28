@@ -11,18 +11,18 @@ services:
     volumes:
       - pulsar_data:/pulsar/data
       - pulsar_conf:/pulsar/conf
-    # healthcheck:
-    #   test: ["CMD-SHELL", "/pulsar/bin/pulsar-admin brokers healthcheck || exit 1"]
-    #   interval: 30s
-    #   timeout: 10s
-    #   retries: 5
+    healthcheck:
+      test: ["CMD-SHELL", "/pulsar/bin/pulsar-admin brokers healthcheck || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
   producer:
     build: 
       context: ../.
       dockerfile: ./images/producer
-    # depends_on:
-    #   pulsar:
-    #     condition: service_healthy
+    depends_on:
+      pulsar:
+        condition: service_healthy
     links:
       - "pulsar:pulsar_domain"
 

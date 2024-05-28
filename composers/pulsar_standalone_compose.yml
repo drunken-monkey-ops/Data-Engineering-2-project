@@ -11,11 +11,6 @@ services:
     volumes:
       - pulsar_data:/pulsar/data
       - pulsar_conf:/pulsar/conf
-    # healthcheck:
-    #   test: ["CMD-SHELL", "/pulsar/bin/pulsar-admin brokers healthcheck || exit 1"]
-    #   interval: 30s
-    #   timeout: 10s
-    #   retries: 5
 
 volumes:
   pulsar_data:

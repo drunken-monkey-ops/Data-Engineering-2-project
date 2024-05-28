@@ -1,11 +1,9 @@
 import requests
 import re
 from requests.models import PreparedRequest
-from utils import read_tokens
+from utils import read_tokens, TOKENS
 from datetime import datetime
 from time import sleep
-
-TOKENS = []
 
 current_token = {
     "core": {"token": "", "remaining": -1, "sleep_time": 60 * 60, "limit": 5000},
@@ -33,6 +31,7 @@ def get_token(type: str):
                     token_found = True
                     break
         if not token_found:
+            print("Sleeping...")
             sleep(current_token[type]["sleep_time"])
             current_token[type]["remaining"] = current_token[type]["limit"]
 
@@ -41,12 +40,14 @@ def get_token(type: str):
 
 
 def get_headers(type: str = "core", token: str = None) -> dict:
-    return {
+    headers = {
         "User-Agent": "Thunder Client (https://www.thunderclient.com)",
         "Accept": "application/vnd.github+json",
         "X-GitHub-Api-Version": "2022-11-28",
-        "Authorization": f"Bearer {token if token else get_token(type)}",
     }
+    if token != "":
+        headers["Authorization"] = f"Bearer {token if token else get_token(type)}"
+    return headers
 
 
 def get_rate_limit(token: str):
@@ -164,6 +165,31 @@ def get_commit_count(owner: str, repo: str) -> int:
         )
     return int(re.findall(r"\d+", response.links["last"]["url"])[-1])
 
+
+def get_repositories_count(from_date: datetime, to_date: datetime) -> int:
+    search_params = [
+        "license:mit",
+        "license:apache-2.0",
+        "license:gpl-3.0",
+        "license:mpl-2.0",
+        f"created:{from_date.strftime('%Y-%m-%d')}..{to_date.strftime('%Y-%m-%d')}",
+    ]
+
+    uri = f"https://api.github.com/search/repositories"
+    request_params = {"q": " ".join(search_params), "order": "desc", "per_page": 1}
+
+    req_url = PreparedRequest()
+    req_url.prepare_url(uri, request_params)
+    req_url = req_url.url
+
+    response = requests.get(req_url, headers=get_headers())
+    if response.status_code != 200:
+        print(
+            f"Failed to fetch repositories: {response.status_code}, message: {response.json().get('message')}"
+        )
+    return int(re.findall(r"\d+", response.links["last"]["url"])[-1])
+
+    
 
 def get_repositories(from_date: datetime, to_date: datetime):
     search_params = [
