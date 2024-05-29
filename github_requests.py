@@ -16,10 +16,6 @@ current_token = {
 }
 
 def get_token(type: str):
-    global TOKENS
-    if not TOKENS:
-        TOKENS = read_tokens()
-
     if current_token[type]["remaining"] <= 0:
         token_found = False
         for token in TOKENS:

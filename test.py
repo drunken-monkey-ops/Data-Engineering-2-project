@@ -4,17 +4,17 @@ from calendar import monthrange
 from github_requests import get_repositories_count
 import json
 
-mongo_client = MongoClient(f"mongodb://130.238.29.12:27017/")
+mongo_client = MongoClient(f"mongodb://130.238.28.90:27017/")
 db = mongo_client["repo_database"]
 collection = db["repo_collection"]
 
-data = []
-for i in collection.find({}):
-    i["_id"] = str(i["_id"])
-    data.append(i)
-print(data[0])
-with open("out.json", "w") as file:
-    json.dump(data, file, indent=4) 
+# data = []
+# for i in collection.find({}):
+#     i["_id"] = str(i["_id"])
+#     data.append(i)
+# print(data[0])
+# with open("out.json", "w") as file:
+#     json.dump(data, file, indent=4) 
 
 # search = {
 #     "created_at": {
@@ -23,24 +23,24 @@ with open("out.json", "w") as file:
 #     }
 # }
 
-# start = datetime(year=2023, month=5, day=1)
-# end = datetime(year=2024, month=5, day=1)
+start = datetime(year=2023, month=5, day=1)
+end = datetime(year=2024, month=5, day=1)
 
-# while start <= end:
-#     delta = timedelta(days=monthrange(2024, start.month)[1] - 1)
-#     search = {
-#         "created_at": {
-#             "$gt": start.isoformat(),
-#             "$lt": (start + delta).isoformat(),
-#         }
-#     }
-#     print(f"{start.isoformat()}) {collection.count_documents(search)}")
-#     start += timedelta(days=monthrange(2024, start.month)[1])
+while start <= end:
+    delta = timedelta(days=monthrange(2024, start.month)[1] - 1)
+    search = {
+        "created_at": {
+            "$gt": start.isoformat(),
+            "$lt": (start + delta).isoformat(),
+        }
+    }
+    print(f"{start.isoformat()}) {collection.count_documents(search)}")
+    start += timedelta(days=monthrange(2024, start.month)[1])
 
-# # safing/mmdbmeld.
-# for i in collection.find({"owner": "safing", "name": "mmdbmeld"}):
-#     print(i)
-# print(collection.count_documents({}))
+# safing/mmdbmeld.
+for i in collection.find({"owner": "safing", "name": "mmdbmeld"}):
+    print(i)
+print(collection.count_documents({}))
 
 
 # start = datetime(year=2023, month=5, day=1)
