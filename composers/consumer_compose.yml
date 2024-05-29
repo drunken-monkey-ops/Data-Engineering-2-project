@@ -8,3 +8,6 @@ services:
     environment:
       IP: ${IP}
       IP_CLIENT: ${IP_CLIENT}
+    deploy:
+      mode: replicated
+      replicas: 3

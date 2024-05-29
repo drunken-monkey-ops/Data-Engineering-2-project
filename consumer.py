@@ -1,9 +1,10 @@
 from pymongo import MongoClient
-import pulsar
+from pulsar import Client, ConsumerType
 from datetime import datetime, timedelta
 from github_requests import get_repositories, get_commit_count, get_repo_workflows, get_repo_languages
 from utils import has_ci_cd, has_tests, TOKENS
 from os import environ as env
+from sys import exit
 
 client_ip = env["IP_CLIENT"] if "IP_CLIENT" in env else "localhost"
 pulsar_ip = env["IP"] if "IP" in env else "localhost"
@@ -15,21 +16,31 @@ mongo_client = MongoClient(f"mongodb://{client_ip}:27017/")
 db = mongo_client["repo_database"]
 collection = db["repo_collection"]
 
-pulsar_client = pulsar.Client(f"pulsar://{pulsar_ip}:6650")
-date_consumer = pulsar_client.subscribe("dates", subscription_name="dates-sub")
-token_consumer = pulsar_client.subscribe("tokens", subscription_name="tokens-sub")
+pulsar_client = Client(f"pulsar://{pulsar_ip}:6650")
+token_consumer = pulsar_client.subscribe("tokens", subscription_name="tokens-sub", consumer_type=ConsumerType.Shared)
+date_consumer = pulsar_client.subscribe("dates", subscription_name="dates-sub", consumer_type=ConsumerType.Shared)
+
+start_producer = pulsar_client.create_producer("consumer-ready")
+start_producer.send("start!".encode())
 
 for _ in range(2):
     try:
-        data = token_consumer.receive(200)
+        data = token_consumer.receive(30000)
         token_consumer.acknowledge(data)
-        TOKENS.append(data.value().decode())
-    except:
-        break
+        token = data.value().decode()
+        print(f"Token {token} adquired!")
+        TOKENS.append(token)
+    except Exception as e:
+        print(f"Error retrieving token: {str(e)}")
+token_consumer.close()
+
+if not TOKENS:
+    print("No token...")
+    exit(1)
 
 keys = ["name", "owner", "has_tests", "has_ci_cd", "commits", "languages", "created_at"]
-
 delta = timedelta(days=1)
+count = 1
 
 while True:
     data = date_consumer.receive()
