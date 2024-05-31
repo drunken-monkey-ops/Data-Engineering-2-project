@@ -81,4 +81,7 @@ We gathered  200,000 GitHub repositories and conducted an analysis on programmin
 ![image](https://github.com/drunken-monkey-ops/Data-Engineering-2-project/assets/66768769/d4d67e1f-bb76-4803-8568-d4b83cf13fd1)
 ![image](https://github.com/drunken-monkey-ops/Data-Engineering-2-project/assets/66768769/fed2ce32-e5b7-45e1-a0dd-e0c8703f2c24)
 
+Scalability Result:
 
+![Strong Scaling](https://github.com/drunken-monkey-ops/Data-Engineering-2-project/assets/57313821/f485dee4-6a0f-42f8-a7ff-bc4e31e51a4a)
+![Efficiency_Strong_Scaling_1111](https://github.com/drunken-monkey-ops/Data-Engineering-2-project/assets/57313821/cf79f6ea-0f32-4f23-9bf9-6b24dc83cb6d)
