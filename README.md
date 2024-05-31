@@ -1,4 +1,35 @@
 # Github Analytics using Apache pulsar
+
+Folder struct and description.
+``` bash
+├── CloudInit 
+│   ├── cloud-init.yaml
+│   └── config.sh
+├── DATA ANALYSES.ipynb
+├── README.md
+├── composers ----------------> required docker files
+│   ├── consumer_compose.yml
+│   ├── db_compose.yml
+│   ├── producer_compose.yml
+│   └── pulsar_standalone_compose.yml
+├── config.yml --------------------> github tokens
+├── consumer.py ----------------------> consumer python 
+├── db_dump.tar.gz
+├── deploy -----------> cloud configuration and start instance script
+│   ├── consumer-cloud-config.txt
+│   ├── producer-cloud-config.txt
+│   └── start_instance.py
+├── github_requests.py 
+├── images --------------> Docker images
+│   ├── consumer
+│   └── producer
+├── producer.py ------------> producer script
+├── requirements.txt ------------> python requirements file
+├── test.py -------------> test file 
+└── utils.py ------------------> all the utility functio to transform JSON response into a meaningful JSON and token ingestion.
+```
+
+
 ## Description
 Our project aims to address limitations by creating an analytic system that uses Apache Pulsar, a streaming framework, to collect and analyze GitHub repository metadata in real-time. The system will investigate key questions about the top ten programming languages, project activity, and development methodologies such as test-driven development and DevOps practices in the last year. To overcome the restrictions of the GitHub API for data collection and to answer these questions, we have designed a specific system architecture using Apache Pulsar and Docker. We selected Apache Pulsar for its capability to handle high-throughput, low-latency data streams and its support for scalable, distributed systems. Furthermore, in the final part of our project, we aim to assess the scalability of our architecture to ensure that it can handle varying workloads and maintain performance. 
 
